@@ -1,0 +1,5 @@
+TODO:
+	* Ensure that calls to fopen() don't fail do to nonexistent file paths.
+	* Refactor build_response_header_content()?
+	* Allow server to server system/web/default.html web page when public/ is empty.
+	* ...And much more!
