@@ -209,6 +209,11 @@ void setup_socket()
 	}
 	//
 
+	// Set socket options.
+	int optval = 1;
+	setsockopt(server.socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+	//
+
 	// Associate socket with port.
 	if(-1 == bind(server.socket, server.info->ai_addr, server.info->ai_addrlen))
 	{
@@ -606,6 +611,13 @@ void build_response_header_content(struct stat* file_stat, const char* content_t
 	else if (0 == strcmp(CONTENT_VIDEO_OGG, content_type))
 	{
 		strcat(response_header, CONTENT_VIDEO_OGG);
+	}
+	//
+
+	// Content-Type: application/octet-stream
+	else if (0 == strcmp(CONTENT_APPLICATION_OCTETSTREAM, content_type))
+	{
+		strcat(response_header, CONTENT_APPLICATION_OCTETSTREAM);
 	}
 	//
 

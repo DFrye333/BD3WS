@@ -8,13 +8,25 @@ BD3WS.h
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <signal.h>
+//
+
+// Linux-specific header files.
+#ifdef __linux__
 #include <unistd.h>
 #include <netdb.h>
-#include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <pthread.h>
-#include <signal.h>
+#endif
+//
+
+// Windows-specific header files.
+#ifdef __WIN32__
+#include <Windows.h>
+#include <WinSock2.h>
+#endif
 //
 
 // HTTP server response headers.
@@ -33,6 +45,7 @@ const char* CONTENT_AUDIO_WEBM = "audio/webm";
 const char* CONTENT_AUDIO_OGG = "audio/ogg";
 const char* CONTENT_VIDEO_WEBM = "video/webm";
 const char* CONTENT_VIDEO_OGG = "video/ogg";
+const char* CONTENT_APPLICATION_OCTETSTREAM = "application/octet-stream";
 const char* CONTENT_ANY = "*/*";
 //
 
@@ -42,7 +55,7 @@ const char* CONTENT_ANY = "*/*";
 // System constants
 const char* BD3WS_ServerName = "BD3WS";
 const char* BD3WS_ServerVersion = "0.1";
-const char* BD3WS_DefaultIP = "localhost";
+const char* BD3WS_DefaultIP = "0.0.0.0";
 const char* BD3WS_DefaultPort = "33333";
 const char* BD3WS_RootDirectory;
 const char* BD3WS_PublicDirectory = "public/";
@@ -64,10 +77,10 @@ typedef enum
 typedef struct
 {
 	int socket;
-	struct sockaddr_storage address_storage;
-	socklen_t address_size;
-	pthread_t thread;
 	int occupied;
+	pthread_t thread;
+	socklen_t address_size;
+	struct sockaddr_storage address_storage;
 } BD3WS_Client;
 //
 
@@ -104,5 +117,5 @@ void log(const char* format, int error);
 BD3WS_Server server;
 pthread_mutex_t mutex_client_request = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_log = PTHREAD_MUTEX_INITIALIZER;
-int log_handle;
+FILE* log_handle;
 //
