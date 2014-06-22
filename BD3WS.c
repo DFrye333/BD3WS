@@ -1,12 +1,12 @@
 /******************************************************************************
-BD3WS Web Server
-BD3WS.c
+	BD3WS Web Server
+	BD3WS.c
 ******************************************************************************/
 
 #include "BD3WS.h"
 
 /******************************************************************************
-		main: Initializes the program and enters the main accept/response loop.
+	main: Initializes the program and enters the main accept/response loop.
 ******************************************************************************/
 int main(int argc, char **argv)
 {
@@ -38,11 +38,6 @@ int main(int argc, char **argv)
 		}
 		else
 		{
-			// Print thread "ID".
-			sprintf(buffer, "Thread ID: %d\n", server.clients[client]);
-			log(buffer, 0);
-			//
-
 			// Detach thread so that it will free itself after it has finished.
 			pthread_detach(server.clients[client].thread);
 			//
@@ -55,8 +50,8 @@ int main(int argc, char **argv)
 }
 
 /******************************************************************************
-		initialize: Initializes the program by setting up structs and sockets,
-	parsing command-line arguments, and listening for client connections.
+	initialize: Initializes the program by setting up structs and sockets,
+parsing command-line arguments, and listening for client connections.
 ******************************************************************************/
 void initialize(int argc, char** argv)
 {
@@ -113,7 +108,7 @@ void initialize(int argc, char** argv)
 }
 
 /******************************************************************************
-		finalize: Performs program shutdown tasks before exiting.
+	finalize: Performs program shutdown tasks before exiting.
 ******************************************************************************/
 void finalize(int exit_code)
 {
@@ -152,7 +147,7 @@ void finalize(int exit_code)
 }	
 
 /******************************************************************************
-		process_CLA: Parses program command-line arguments.
+	process_CLA: Parses program command-line arguments.
 ******************************************************************************/
 void process_CLA(int argc, char** argv)
 {
@@ -180,8 +175,8 @@ void process_CLA(int argc, char** argv)
 }
 
 /******************************************************************************
-		extract_connection_information: Extracts information pertaining to
-	the server-client connection (server IP address and port, etc.).
+	extract_connection_information: Extracts information pertaining to
+the server-client connection (server IP address and port, etc.).
 ******************************************************************************/
 void extract_connection_information()
 {
@@ -225,8 +220,8 @@ void setup_socket()
 }
 
 /******************************************************************************
-		acccept_client: Waits on client requests and sets up server-client
-	connections upon receiving them.
+	acccept_client: Waits on client requests and sets up server-client
+connections upon receiving them.
 ******************************************************************************/
 int accept_client()
 {
@@ -268,11 +263,11 @@ int accept_client()
 }
 
 /******************************************************************************
-		handle_client_request: Upon receiving a client request, the server
-	spawns a thread. The thread's main task is to execute this function, which
-	parses incoming client requests and responds to them accordingly. Before
-	returning, connection sockets are closed and client structures are vacated
-	for future tasks.
+	handle_client_request: Upon receiving a client request, the server
+spawns a thread. The thread's main task is to execute this function, which
+parses incoming client requests and responds to them accordingly. Before
+returning, connection sockets are closed and client structures are vacated
+for future tasks.
 ******************************************************************************/
 void* handle_client_request(void* client)
 {
@@ -307,8 +302,8 @@ void* handle_client_request(void* client)
 }
 
 /******************************************************************************
-		parse_client_request: Parses incoming client request to determine an
-	appropriate server response.
+	parse_client_request: Parses incoming client request to determine an
+appropriate server response.
 ******************************************************************************/
 void parse_client_request(int client, char* file_path, char* content_type)
 {
@@ -380,10 +375,10 @@ void parse_client_request(int client, char* file_path, char* content_type)
 }
 
 /******************************************************************************
-		send_server_response: Sends server response to client request. This
-	involves checking the requested file for existence and validity, building
-	an HTTP response header, filling the response body, and sending it through
-	the client connection.
+	send_server_response: Sends server response to client request. This
+involves checking the requested file for existence and validity, building
+an HTTP response header, filling the response body, and sending it through
+the client connection.
 ******************************************************************************/
 void send_server_response(int client, const char* file_name, const char* content_type)
 {
@@ -484,8 +479,8 @@ void send_server_response(int client, const char* file_name, const char* content
 }
 
 /******************************************************************************
-		build_response_header: Constructs the HTTP response header that will
-	be sent to a client.
+	build_response_header: Constructs the HTTP response header that will
+be sent to a client.
 ******************************************************************************/
 void build_response_header(struct stat* file_stat, const char* content_type, char* response_header)
 {
@@ -513,8 +508,8 @@ void build_response_header(struct stat* file_stat, const char* content_type, cha
 }
 
 /******************************************************************************
-		build_response_header_state: Constructs the HTTP status (200 OK, 404
-	NOT FOUND, etc.) portion of the server HTTP response header.
+	build_response_header_state: Constructs the HTTP status (200 OK, 404
+NOT FOUND, etc.) portion of the server HTTP response header.
 ******************************************************************************/
 void build_response_header_state(char* response_header)
 {
@@ -531,8 +526,8 @@ void build_response_header_state(char* response_header)
 }
 
 /******************************************************************************
-		build_response_header_content: Constructs the Content fields of the
-	server HTTP response header (Content-Type, Content-Length, etc.).
+	build_response_header_content: Constructs the Content fields of the
+server HTTP response header (Content-Type, Content-Length, etc.).
 ******************************************************************************/
 void build_response_header_content(struct stat* file_stat, const char* content_type, char* response_header)
 {
@@ -634,8 +629,8 @@ void build_response_header_content(struct stat* file_stat, const char* content_t
 }
 
 /******************************************************************************
-		server_information: Constructs a string describing server program meta-
-	data (name, version, etc.).
+	server_information: Constructs a string describing server program meta-
+data (name, version, etc.).
 ******************************************************************************/
 void server_information(char* information)
 {
@@ -645,7 +640,7 @@ void server_information(char* information)
 }
 
 /******************************************************************************
-		log: Logs server activity in the system log file.
+	log: Logs server activity in the system log file.
 ******************************************************************************/
 void log(const char* message, int error)
 {

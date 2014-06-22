@@ -6,7 +6,8 @@ A simple multithreaded web server written in C.
 TODO:
 
 * Ensure that calls to fopen() don't fail due to nonexistent file paths.
-* Refactor build_response_header_content()?
+* Rewrite build_response_header_content() to handle content negotiation more 
+intelligently.
 * Allow server to serve system/web/default.html web page when public/ is empty.
 * Redo threading in a more intelligent fashion. Rather than 
 one-thread-per-connection, maybe extract work from connections, queue it, and 
