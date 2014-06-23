@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 	//
 
 	// Server main loop.
-	while(1)
+	while (1)
 	{
 		// Accept connection request from client or continue looping.
 		client = accept_client();
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 		if (0 != pthread_create(&(server.clients[client].thread), NULL, handle_client_request, client))
 		{
 			sprintf(buffer, "(%s | Error): Error creating thread!", BD3WS_ServerName);
-			log(buffer, 1);
+			log(buffer, STDERR);
 		}
 		else
 		{
@@ -59,12 +59,13 @@ void initialize(int argc, char** argv)
 
 	memset(buffer, 0, sizeof(buffer));
 
-	// Open log file.
+	// Open log file, ensuring that its directory exists beforehand.
+	mkdir(BD3WS_LogDirectory, S_IRWXU | S_IRWXG | S_IROTH);
 	log_handle = fopen(BD3WS_Log, "w");
 	//
 
 	sprintf(buffer, "(%s | Information): Initializing...\n", BD3WS_ServerName);
-	log(buffer, 0);
+	log(buffer, STDOUT);
 
 	// Set initial server configuration.
 	memset(&(server.hints), 0, sizeof(server.hints));
@@ -103,7 +104,7 @@ void initialize(int argc, char** argv)
 	// Begin listening on the socket.
 	listen(server.socket, 3);
 	sprintf(buffer, "(%s | Information): Listening on %s:%hu\n", BD3WS_ServerName, server.ip, server.port);
-	log(buffer, 0);
+	log(buffer, STDOUT);
 	//
 }
 
@@ -117,7 +118,7 @@ void finalize(int exit_code)
 	memset(buffer, 0, sizeof(buffer));
 
 	sprintf(buffer, "(%s | Information): Finalizing...\n", BD3WS_ServerName);
-	log(buffer, 0);
+	log(buffer, STDOUT);
 
 	// Close connection sockets.
 	for (int i = 0; i < BD3WS_MaxNumberClients; ++i)
@@ -159,7 +160,7 @@ void process_CLA(int argc, char** argv)
 	if(3 == argc && 0 != getaddrinfo(argv[1], argv[2], &(server.hints), &(server.info)))
 	{
 		sprintf(buffer, "(%s | Error): Cannot get specified address information!\n", BD3WS_ServerName);
-		log(buffer, 1);
+		log(buffer, STDERR);
 		finalize(1);
 	}
 	//
@@ -168,7 +169,7 @@ void process_CLA(int argc, char** argv)
 	else if(3 > argc && 0 != getaddrinfo(BD3WS_DefaultIP, BD3WS_DefaultPort, &(server.hints), &(server.info)))
 	{
 		sprintf(buffer, "(%s | Error): Cannot get default address information!\n", BD3WS_ServerName);
-		log(buffer, 1);
+		log(buffer, STDERR);
 		finalize(1);
 	}
 	//
@@ -199,7 +200,7 @@ void setup_socket()
 	if(0 > (server.socket = socket(server.info->ai_family, server.info->ai_socktype, server.info->ai_protocol)))
 	{
 		sprintf(buffer, "(%s | Error): Invalid server socket descriptor!\n", BD3WS_ServerName);
-		log(buffer, 1);
+		log(buffer, STDERR);
 		finalize(1);
 	}
 	//
@@ -213,7 +214,7 @@ void setup_socket()
 	if(-1 == bind(server.socket, server.info->ai_addr, server.info->ai_addrlen))
 	{
 		sprintf(buffer, "(%s | Error): Cannot bind to socket!\n", BD3WS_ServerName);
-		log(buffer, 1);
+		log(buffer, STDERR);
 		finalize(1);
 	}
 	//
@@ -245,11 +246,11 @@ int accept_client()
 			if(-1 == (server.clients[i].socket = accept(server.socket, (struct sockaddr *)&(server.clients[i].address_storage), &(server.clients[i].address_size))))
 			{
 				sprintf(buffer, "(%s | Error): Invalid connection socket descriptor!\n", BD3WS_ServerName);
-				log(buffer, 1);
+				log(buffer, STDERR);
 				return -1;
 			}
 			sprintf(buffer, "(%s | Information): Accepted connection request from client.\n", BD3WS_ServerName);
-			log(buffer, 0);
+			log(buffer, STDOUT);
 			break;
 			//
 		}
@@ -321,11 +322,11 @@ void parse_client_request(int client, char* file_path, char* content_type)
 	{
 		// Print client request.
 		strcat(buffer, "\n===========================================================\n");
-		strcat(buffer, "\t\t\tClient Request: ");
+		strcat(buffer, "\t\t\tClient Request Header: ");
 		strcat(buffer, "\n===========================================================\n");
 		sprintf((buffer + strlen(buffer)), "%s\n", request);
 		strcat(buffer, "\n===========================================================\n");
-		log(buffer, 0);
+		log(buffer, NONE);
 		//
 
 		token = strtok(request, "\n");
@@ -415,7 +416,7 @@ void send_server_response(int client, const char* file_name, const char* content
 	if (NULL == file_handle)
 	{
 		sprintf(buffer, "(%s | Error): Cannot serve file: \"%s\"!\n", BD3WS_ServerName, file_path);
-		log(buffer, 1);
+		log(buffer, STDERR);
 		server.response_state = NOTFOUND;
 	}
 	else
@@ -439,7 +440,7 @@ void send_server_response(int client, const char* file_name, const char* content
 	if (-1 == send(server.clients[client].socket, response_header, strlen(response_header), 0))
 	{
 		sprintf(buffer, "(%s | Error): Cannot send response header to client!\n", BD3WS_ServerName);
-		log(buffer, 1);
+		log(buffer, STDERR);
 		return;
 	}
 	//
@@ -462,7 +463,7 @@ void send_server_response(int client, const char* file_name, const char* content
 		if(-1 == send(server.clients[client].socket, buffer, BD3WS_MaxLengthData, 0))
 		{
 			sprintf(buffer, "(%s | Error): Cannot send file data to client!\n", BD3WS_ServerName);
-			log(buffer, 1);
+			log(buffer, STDERR);
 			fclose(file_handle);
 			return;
 		}
@@ -474,8 +475,8 @@ void send_server_response(int client, const char* file_name, const char* content
 
 	fclose(file_handle);
 
-	sprintf(buffer, "(%s | Information): File sent successfully!\n", BD3WS_ServerName);
-	log(buffer, 0);
+	sprintf(buffer, "(%s | Information): File \"%s\" sent successfully!\n", BD3WS_ServerName, file_path);
+	log(buffer, STDOUT);
 }
 
 /******************************************************************************
@@ -493,6 +494,8 @@ void build_response_header(struct stat* file_stat, const char* content_type, cha
 	strcat(response_header, "\n");
 	strcat(response_header, "Server: ");
 	strcat(response_header, BD3WS_ServerName);
+	strcat(response_header, " v");
+	strcat(response_header, BD3WS_ServerVersion);
 	strcat(response_header, "\n");
 
 	build_response_header_content(file_stat, content_type, response_header);
@@ -504,7 +507,7 @@ void build_response_header(struct stat* file_stat, const char* content_type, cha
 	strcat(buffer, "\n===========================================================\n");
 	strcat(buffer, response_header);
 	sprintf((buffer + strlen(buffer)), "\n===========================================================\n");
-	log(buffer, 0);
+	log(buffer, NONE);
 }
 
 /******************************************************************************
@@ -642,24 +645,31 @@ void server_information(char* information)
 /******************************************************************************
 	log: Logs server activity in the system log file.
 ******************************************************************************/
-void log(const char* message, int error)
+void log(const char* message, int print)
 {
 	pthread_mutex_lock(&mutex_log);
 
 	// Ensure that the log file is open.
 	if (NULL == log_handle)
 	{
+		// Ensure that if the log file is not open, it can be opened (or created, if necessary).
+		if (-1 == mkdir(BD3WS_LogDirectory, S_IRWXU | S_IRWXG | S_IROTH))
+		{
+			return;
+		}
+		//
+
 		log_handle = fopen(BD3WS_Log, "w");
 	}
 	//
 
 	// Determine if writing to stdout or stderr.
-	if (0 == error)
+	if (STDOUT == print)
 	{
 		fprintf(stdout, "%s", message);
 		fflush(stdout);
 	}
-	else if(1 == error)
+	else if(STDERR == print)
 	{
 		fprintf(stderr, "%s", message);
 		fflush(stderr);
