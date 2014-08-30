@@ -73,6 +73,14 @@ typedef enum
 } BD3WS_HTTPResponseState;
 //
 
+// Output printing codes.
+typedef enum
+{
+	NONE = 0,
+	STDOUT = 1,
+	STDERR = 2,
+} BD3WS_Output;
+
 // Client connections.
 typedef struct
 {
