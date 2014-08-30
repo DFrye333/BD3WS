@@ -1,9 +1,10 @@
 BD3WS
-=====
+===
 
 A simple multithreaded web server written in C.
 
-TODO:
+TODO
+---
 
 * Ensure that calls to fopen() don't fail due to nonexistent file paths.
 * Rewrite build_response_header_content() to handle content negotiation more 

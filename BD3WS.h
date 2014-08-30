@@ -49,10 +49,10 @@ const char* CONTENT_APPLICATION_OCTETSTREAM = "application/octet-stream";
 const char* CONTENT_ANY = "*/*";
 //
 
+// System constants.
 #define BD3WS_MaxLengthData 2048
 #define BD3WS_MaxNumberClients 16
 
-// System constants
 const char* BD3WS_ServerName = "BD3WS";
 const char* BD3WS_ServerVersion = "0.1";
 const char* BD3WS_DefaultIP = "0.0.0.0";
@@ -113,7 +113,7 @@ void build_response_header_content(struct stat* file_stat, const char* content_t
 void log(const char* format, int error);
 //
 
-// Globals.
+// Global variables.
 BD3WS_Server server;
 pthread_mutex_t mutex_client_request = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_log = PTHREAD_MUTEX_INITIALIZER;

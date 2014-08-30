@@ -175,8 +175,8 @@ void process_CLA(int argc, char** argv)
 }
 
 /******************************************************************************
-	extract_connection_information: Extracts information pertaining to
-the server-client connection (server IP address and port, etc.).
+	extract_connection_information: Extracts information pertaining to the 
+server-client connection (server IP address and port, etc.).
 ******************************************************************************/
 void extract_connection_information()
 {
@@ -189,6 +189,10 @@ void extract_connection_information()
 	//
 }
 
+/******************************************************************************
+	setup_socket: Establishes server socket/port pairing to prepare the server 
+to listen for incoming client connections.
+******************************************************************************/
 void setup_socket()
 {
 	char buffer[BD3WS_MaxLengthData];
@@ -263,11 +267,11 @@ int accept_client()
 }
 
 /******************************************************************************
-	handle_client_request: Upon receiving a client request, the server
-spawns a thread. The thread's main task is to execute this function, which
-parses incoming client requests and responds to them accordingly. Before
-returning, connection sockets are closed and client structures are vacated
-for future tasks.
+	handle_client_request: Upon receiving a client request, the server spawns 
+a thread. The thread's main task is to execute this function, which parses 
+incoming client requests and responds to them accordingly. Before returning, 
+connection sockets are closed and client structures are vacated for future 
+tasks.
 ******************************************************************************/
 void* handle_client_request(void* client)
 {
@@ -376,9 +380,9 @@ void parse_client_request(int client, char* file_path, char* content_type)
 
 /******************************************************************************
 	send_server_response: Sends server response to client request. This
-involves checking the requested file for existence and validity, building
-an HTTP response header, filling the response body, and sending it through
-the client connection.
+involves checking the requested file for existence and validity, building an 
+HTTP response header, filling the response body, and sending it through the 
+client connection.
 ******************************************************************************/
 void send_server_response(int client, const char* file_name, const char* content_type)
 {
@@ -479,8 +483,8 @@ void send_server_response(int client, const char* file_name, const char* content
 }
 
 /******************************************************************************
-	build_response_header: Constructs the HTTP response header that will
-be sent to a client.
+	build_response_header: Constructs the HTTP response header that will be 
+sent to a client.
 ******************************************************************************/
 void build_response_header(struct stat* file_stat, const char* content_type, char* response_header)
 {
@@ -508,8 +512,8 @@ void build_response_header(struct stat* file_stat, const char* content_type, cha
 }
 
 /******************************************************************************
-	build_response_header_state: Constructs the HTTP status (200 OK, 404
-NOT FOUND, etc.) portion of the server HTTP response header.
+	build_response_header_state: Constructs the HTTP status (200 OK, 404 NOT 
+FOUND, etc.) portion of the server HTTP response header.
 ******************************************************************************/
 void build_response_header_state(char* response_header)
 {
@@ -526,8 +530,8 @@ void build_response_header_state(char* response_header)
 }
 
 /******************************************************************************
-	build_response_header_content: Constructs the Content fields of the
-server HTTP response header (Content-Type, Content-Length, etc.).
+	build_response_header_content: Constructs the Content fields of the server 
+HTTP response header (Content-Type, Content-Length, etc.).
 ******************************************************************************/
 void build_response_header_content(struct stat* file_stat, const char* content_type, char* response_header)
 {
