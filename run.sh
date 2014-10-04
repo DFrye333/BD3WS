@@ -5,6 +5,7 @@
 #!/bin/bash
 
 echo -e "--------------------------------------------"
+
 # Attempt compilation.
 echo -e "Compiling..."
 gcc -g -w -std=gnu99 -pthread -o BD3WS BD3WS.c
@@ -18,6 +19,7 @@ if [ $? -eq 0 ]; then
 	else
 		./BD3WS
 	fi
+
 # Failed compile. Do not run the program.
 else
 	echo -e "\n\nFailed to compile!"

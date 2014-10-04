@@ -11,6 +11,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
+#include <errno.h>
+#include <time.h>
 //
 
 // Linux-specific header files.
@@ -51,7 +53,7 @@ const char* CONTENT_ANY = "*/*";
 
 // System constants.
 #define BD3WS_MaxLengthData 2048
-#define BD3WS_MaxNumberClients 16
+#define BD3WS_MaxNumberClients 128
 
 const char* BD3WS_ServerName = "BD3WS";
 const char* BD3WS_ServerVersion = "0.1";
@@ -76,7 +78,7 @@ typedef enum
 // Output printing codes.
 typedef enum
 {
-	NONE = 0,
+	NONE = -1,
 	STDOUT = 1,
 	STDERR = 2,
 } BD3WS_Output;
@@ -100,7 +102,7 @@ typedef struct
 	unsigned short port;
 	struct addrinfo* info;
 	struct addrinfo hints;
-	BD3WS_HTTPResponseState response_state;
+	// BD3WS_HTTPResponseState response_state;
 	BD3WS_Client clients[BD3WS_MaxNumberClients];
 } BD3WS_Server;
 //
@@ -115,15 +117,14 @@ int accept_client();
 void* handle_client_request(void* client);
 void parse_client_request(int client, char* file_path, char* content_type);
 void send_server_response(int client, const char* file_name, const char* content_type);
-void build_response_header(struct stat* file_stat, const char* content_type, char* response_header);
-void build_response_header_state(char* response_header);
+void build_response_header(struct stat* file_stat, const char* content_type, char* response_header, BD3WS_HTTPResponseState response_state);
+void build_response_header_state(char* response_header, BD3WS_HTTPResponseState response_state);
 void build_response_header_content(struct stat* file_stat, const char* content_type, char* response_header);
 void log(const char* format, int error);
 //
 
 // Global variables.
 BD3WS_Server server;
-pthread_mutex_t mutex_client_request = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_log = PTHREAD_MUTEX_INITIALIZER;
 FILE* log_handle;
 //

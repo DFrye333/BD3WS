@@ -1,7 +1,15 @@
 BD3WS
 ===
 
-A simple multithreaded web server written in C.
+**Description:**
+
+A simple multithreaded web server written in C. Currently works on Linux only.
+
+**Installation:**
+
+Run the included run.sh bash script to compile the source and execute the 
+resulting binary. The software makes use of the Pthreads library, so this is a 
+prerequisite.
 
 **TODO:**
 
@@ -14,4 +22,5 @@ one-thread-per-connection, maybe extract work from connections, queue it, and
 feed the queue to a thread pool? Something to think about.
 * Cross-platform compatibility! It would be nice to successfully compile this
 to Windows as well.
+* Buffer overflows galore! Figure out a better system than BD3WS_MaxLengthData.
 * ...And much more!

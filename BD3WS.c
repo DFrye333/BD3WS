@@ -24,16 +24,16 @@ int main(int argc, char **argv)
 	{
 		// Accept connection request from client or continue looping.
 		client = accept_client();
-		if(-1 == client)
+		if (-1 == client)
 		{
 			continue;
 		}
 		//
 
-		// Spawn a thread to handle incoming client request.
+		// Spawn a thread to handle incoming client request or log the resulting error.
 		if (0 != pthread_create(&(server.clients[client].thread), NULL, handle_client_request, client))
 		{
-			sprintf(buffer, "(%s | Error): Error creating thread!", BD3WS_ServerName);
+			sprintf(buffer, "Error creating thread!\n");
 			log(buffer, STDERR);
 		}
 		else
@@ -64,7 +64,7 @@ void initialize(int argc, char** argv)
 	log_handle = fopen(BD3WS_Log, "w");
 	//
 
-	sprintf(buffer, "(%s | Information): Initializing...\n", BD3WS_ServerName);
+	sprintf(buffer, "Initializing...\n");
 	log(buffer, STDOUT);
 
 	// Set initial server configuration.
@@ -103,7 +103,7 @@ void initialize(int argc, char** argv)
 
 	// Begin listening on the socket.
 	listen(server.socket, 3);
-	sprintf(buffer, "(%s | Information): Listening on %s:%hu\n", BD3WS_ServerName, server.ip, server.port);
+	sprintf(buffer, "Listening on %s:%hu\n", server.ip, server.port);
 	log(buffer, STDOUT);
 	//
 }
@@ -117,7 +117,7 @@ void finalize(int exit_code)
 
 	memset(buffer, 0, sizeof(buffer));
 
-	sprintf(buffer, "(%s | Information): Finalizing...\n", BD3WS_ServerName);
+	sprintf(buffer, "Finalizing...\n");
 	log(buffer, STDOUT);
 
 	// Close connection sockets.
@@ -157,18 +157,18 @@ void process_CLA(int argc, char** argv)
 	memset(buffer, 0, sizeof(buffer));
 
 	// Return address information for the specified hostname and service.
-	if(3 == argc && 0 != getaddrinfo(argv[1], argv[2], &(server.hints), &(server.info)))
+	if (3 == argc && 0 != getaddrinfo(argv[1], argv[2], &(server.hints), &(server.info)))
 	{
-		sprintf(buffer, "(%s | Error): Cannot get specified address information!\n", BD3WS_ServerName);
+		sprintf(buffer, "Cannot get specified address information!\n");
 		log(buffer, STDERR);
 		finalize(1);
 	}
 	//
 
 	// Return address information for the default hostname and service.
-	else if(3 > argc && 0 != getaddrinfo(BD3WS_DefaultIP, BD3WS_DefaultPort, &(server.hints), &(server.info)))
+	else if (3 > argc && 0 != getaddrinfo(BD3WS_DefaultIP, BD3WS_DefaultPort, &(server.hints), &(server.info)))
 	{
-		sprintf(buffer, "(%s | Error): Cannot get default address information!\n", BD3WS_ServerName);
+		sprintf(buffer, "Cannot get default address information!\n");
 		log(buffer, STDERR);
 		finalize(1);
 	}
@@ -201,9 +201,9 @@ void setup_socket()
 	memset(buffer, 0, sizeof(buffer));
 
 	// Get a server socket descriptor.
-	if(0 > (server.socket = socket(server.info->ai_family, server.info->ai_socktype, server.info->ai_protocol)))
+	if (0 > (server.socket = socket(server.info->ai_family, server.info->ai_socktype, server.info->ai_protocol)))
 	{
-		sprintf(buffer, "(%s | Error): Invalid server socket descriptor!\n", BD3WS_ServerName);
+		sprintf(buffer, "Invalid server socket descriptor!\n");
 		log(buffer, STDERR);
 		finalize(1);
 	}
@@ -215,9 +215,9 @@ void setup_socket()
 	//
 
 	// Associate socket with port.
-	if(-1 == bind(server.socket, server.info->ai_addr, server.info->ai_addrlen))
+	if (-1 == bind(server.socket, server.info->ai_addr, server.info->ai_addrlen))
 	{
-		sprintf(buffer, "(%s | Error): Cannot bind to socket!\n", BD3WS_ServerName);
+		sprintf(buffer, "Cannot bind to socket!\n");
 		log(buffer, STDERR);
 		finalize(1);
 	}
@@ -225,7 +225,7 @@ void setup_socket()
 }
 
 /******************************************************************************
-	acccept_client: Waits on client requests and sets up server-client
+	accept_client: Waits on client requests and sets up server-client 
 connections upon receiving them.
 ******************************************************************************/
 int accept_client()
@@ -247,15 +247,18 @@ int accept_client()
 
 			// Wait on client connection.
 			server.clients[i].address_size = sizeof(server.clients[i].address_storage);
-			if(-1 == (server.clients[i].socket = accept(server.socket, (struct sockaddr *)&(server.clients[i].address_storage), &(server.clients[i].address_size))))
+			if (-1 == (server.clients[i].socket = accept(server.socket, (struct sockaddr *)&(server.clients[i].address_storage), &(server.clients[i].address_size))))
 			{
-				sprintf(buffer, "(%s | Error): Invalid connection socket descriptor!\n", BD3WS_ServerName);
+				sprintf(buffer, "Invalid connection socket descriptor!\n");
 				log(buffer, STDERR);
 				return -1;
 			}
-			sprintf(buffer, "(%s | Information): Accepted connection request from client.\n", BD3WS_ServerName);
+			//
+
+			// Indicate successful client acceptance and return newly-occupied index.
+			sprintf(buffer, "Accepted connection request from client.\n");
 			log(buffer, STDOUT);
-			break;
+			return i;
 			//
 		}
 		//
@@ -263,7 +266,7 @@ int accept_client()
 	//
 
 	// Return occupied client's index in server's client array.
-	return i;
+	return -1;
 	//
 }
 
@@ -281,8 +284,6 @@ void* handle_client_request(void* client)
 
 	memset(file_path, 0, sizeof(file_path));
 	memset(content_type, 0, sizeof(content_type));
-
-	pthread_mutex_lock(&mutex_client_request);
 
 	// Receive file data request from client.
 	parse_client_request((int)client, &file_path, &content_type);
@@ -302,8 +303,6 @@ void* handle_client_request(void* client)
 	// Vacate client.
 	server.clients[(int)client].occupied = 0;
 	//
-
-	pthread_mutex_unlock(&mutex_client_request);
 }
 
 /******************************************************************************
@@ -322,7 +321,7 @@ void parse_client_request(int client, char* file_path, char* content_type)
 	memset(request, 0, sizeof(request));
 
 	// Attempt to receive a client request.
-	if(-1 != recv(server.clients[client].socket, request, BD3WS_MaxLengthData, 0))
+	if (-1 != recv(server.clients[client].socket, request, BD3WS_MaxLengthData, 0))
 	{
 		// Print client request.
 		strcat(buffer, "\n===========================================================\n");
@@ -336,7 +335,7 @@ void parse_client_request(int client, char* file_path, char* content_type)
 		token = strtok(request, "\n");
 
 		// Isolate string containing file path.
-		while(NULL != token)
+		while (NULL != token)
 		{
 			// Isolate line containing file path.
 			if (NULL != strstr(token, "GET"))
@@ -380,7 +379,7 @@ void parse_client_request(int client, char* file_path, char* content_type)
 }
 
 /******************************************************************************
-	send_server_response: Sends server response to client request. This
+	send_server_response: Sends server response to client request. This 
 involves checking the requested file for existence and validity, building an 
 HTTP response header, filling the response body, and sending it through the 
 client connection.
@@ -393,6 +392,8 @@ void send_server_response(int client, const char* file_name, const char* content
 	char buffer[BD3WS_MaxLengthData];
 	char response_header[BD3WS_MaxLengthData];
 	int bytes_read = 0;
+
+	BD3WS_HTTPResponseState response_state;
 
 	memset(buffer, 0, sizeof(buffer));
 	memset(response_header, 0, sizeof(response_header));
@@ -412,6 +413,9 @@ void send_server_response(int client, const char* file_name, const char* content
 	}
 	//
 
+	// Clean the file path.
+	clean_file_path(file_path);
+
 	// Open file.
 	file_handle = fopen(file_path, "r");
 	//
@@ -419,18 +423,20 @@ void send_server_response(int client, const char* file_name, const char* content
 	// Check file existence to create proper response header.
 	if (NULL == file_handle)
 	{
-		sprintf(buffer, "(%s | Error): Cannot serve file: \"%s\"!\n", BD3WS_ServerName, file_path);
+		char error_buffer[256];
+		strerror_r(errno, error_buffer, 256);
+		sprintf(buffer, "Cannot serve file: \"%s\"! Details: %s\n", file_path, error_buffer);
 		log(buffer, STDERR);
-		server.response_state = NOTFOUND;
+		response_state = NOTFOUND;
 	}
 	else
 	{
-		server.response_state = OK;
+		response_state = OK;
 	}
 	//
 
 	// If HTTP 404 occurs, serve error 404 page.
-	if (NOTFOUND == server.response_state)
+	if (NOTFOUND == response_state)
 	{
 		strcpy(file_path, BD3WS_FileHTTP404);
 		file_handle = fopen(file_path, "r");
@@ -438,19 +444,22 @@ void send_server_response(int client, const char* file_name, const char* content
 	}
 	//
 
-	build_response_header(&file_stat, content_type, response_header);
+	build_response_header(&file_stat, content_type, response_header, response_state);
 
 	// Send response header to client.
 	if (-1 == send(server.clients[client].socket, response_header, strlen(response_header), 0))
 	{
-		sprintf(buffer, "(%s | Error): Cannot send response header to client!\n", BD3WS_ServerName);
+		char error_buffer[256];
+		strerror_r(errno, error_buffer, 256);
+		sprintf(buffer, "Cannot send response header to client! Details: %s\n", error_buffer);
 		log(buffer, STDERR);
+		fclose(file_handle);
 		return;
 	}
 	//
 
 	// Read file and send it to client.
-	while(!feof(file_handle))
+	while (!feof(file_handle))
 	{
 		// Read requested file data.
 		bytes_read = fread(buffer, 1, BD3WS_MaxLengthData, file_handle);
@@ -464,9 +473,11 @@ void send_server_response(int client, const char* file_name, const char* content
 		//
 
 		// Send requested file data to client.
-		if(-1 == send(server.clients[client].socket, buffer, BD3WS_MaxLengthData, 0))
+		if (-1 == send(server.clients[client].socket, buffer, BD3WS_MaxLengthData, 0))
 		{
-			sprintf(buffer, "(%s | Error): Cannot send file data to client!\n", BD3WS_ServerName);
+			char error_buffer[256];
+			strerror_r(errno, error_buffer, 256);
+			sprintf(buffer, "Cannot send file data to client! Details: %s\n", error_buffer);
 			log(buffer, STDERR);
 			fclose(file_handle);
 			return;
@@ -479,7 +490,7 @@ void send_server_response(int client, const char* file_name, const char* content
 
 	fclose(file_handle);
 
-	sprintf(buffer, "(%s | Information): File \"%s\" sent successfully!\n", BD3WS_ServerName, file_path);
+	sprintf(buffer, "File \"%s\" sent successfully!\n", file_path);
 	log(buffer, STDOUT);
 }
 
@@ -487,13 +498,13 @@ void send_server_response(int client, const char* file_name, const char* content
 	build_response_header: Constructs the HTTP response header that will be 
 sent to a client.
 ******************************************************************************/
-void build_response_header(struct stat* file_stat, const char* content_type, char* response_header)
+void build_response_header(struct stat* file_stat, const char* content_type, char* response_header, BD3WS_HTTPResponseState response_state)
 {
 	char buffer[BD3WS_MaxLengthData];
 
 	memset(buffer, 0, sizeof(buffer));
 
-	build_response_header_state(response_header);
+	build_response_header_state(response_header, response_state);
 
 	strcat(response_header, "\n");
 	strcat(response_header, "Server: ");
@@ -518,14 +529,14 @@ void build_response_header(struct stat* file_stat, const char* content_type, cha
 	build_response_header_state: Constructs the HTTP status (200 OK, 404 NOT 
 FOUND, etc.) portion of the server HTTP response header.
 ******************************************************************************/
-void build_response_header_state(char* response_header)
+void build_response_header_state(char* response_header, BD3WS_HTTPResponseState response_state)
 {
 	// Determine HTTP response state of requested file.
-	if (OK == server.response_state)
+	if (OK == response_state)
 	{
 		strcat(response_header, HTTP_200_OK);
 	}
-	else if (NOTFOUND == server.response_state)
+	else if (NOTFOUND == response_state)
 	{
 		strcat(response_header, HTTP_404_NOTFOUND);
 	}
@@ -548,7 +559,8 @@ void build_response_header_content(struct stat* file_stat, const char* content_t
 	if (0 == strcmp(CONTENT_TEXT_PLAIN, content_type))
 	{
 		strcat(response_header, CONTENT_TEXT_PLAIN);
-		strcat(response_header, ";charset=UTF-8");
+		// strcat(response_header, ";charset=UTF-8");
+		strcat(response_header, ";charset=Windows-1252");
 	}
 	//
 
@@ -556,7 +568,8 @@ void build_response_header_content(struct stat* file_stat, const char* content_t
 	else if (0 == strcmp(CONTENT_TEXT_HTML, content_type))
 	{
 		strcat(response_header, CONTENT_TEXT_HTML);
-		strcat(response_header, ";charset=UTF-8");
+		// strcat(response_header, ";charset=UTF-8");
+		strcat(response_header, ";charset=Windows-1252");
 	}
 	//
 
@@ -636,8 +649,8 @@ void build_response_header_content(struct stat* file_stat, const char* content_t
 }
 
 /******************************************************************************
-	server_information: Constructs a string describing server program meta-
-data (name, version, etc.).
+	server_information: Constructs a string describing server program 
+meta-data (name, version, etc.).
 ******************************************************************************/
 void server_information(char* information)
 {
@@ -649,9 +662,13 @@ void server_information(char* information)
 /******************************************************************************
 	log: Logs server activity in the system log file.
 ******************************************************************************/
-void log(const char* message, int print)
+void log(const char* message, BD3WS_Output output)
 {
+	// Lock the log mutex.
 	pthread_mutex_lock(&mutex_log);
+	//
+
+	char log_message[BD3WS_MaxLengthData];
 
 	// Ensure that the log file is open.
 	if (NULL == log_handle)
@@ -659,6 +676,10 @@ void log(const char* message, int print)
 		// Ensure that if the log file is not open, it can be opened (or created, if necessary).
 		if (-1 == mkdir(BD3WS_LogDirectory, S_IRWXU | S_IRWXG | S_IROTH))
 		{
+			// Unlock the log mutex before returning prematurely.
+			pthread_mutex_unlock(&mutex_log);
+			//
+
 			return;
 		}
 		//
@@ -667,23 +688,105 @@ void log(const char* message, int print)
 	}
 	//
 
-	// Determine if writing to stdout or stderr.
-	if (STDOUT == print)
+	// Prepend a timestamp to the log message.
+	time_t log_time = time(NULL);
+	strftime(log_message, BD3WS_MaxLengthData, "%D %T", localtime(&log_time));
+	//
+	
+
+	// Determine output to write to.
+	if (NONE == output)
 	{
-		fprintf(stdout, "%s", message);
-		fflush(stdout);
+		// Print timestamp and raw message content only.
+		sprintf(log_message, "%s : %s", log_message, message);
+		//
 	}
-	else if(STDERR == print)
+	else if (STDOUT == output)
 	{
-		fprintf(stderr, "%s", message);
-		fflush(stderr);
+		// Denote message as an informational message.
+		sprintf(log_message, "%s (%s | Information): %s", log_message, BD3WS_ServerName, message);
+		//
+
+		// Write to stdout.
+		fprintf(stdout, "%s", log_message);
+		fflush(stdout);
+		//
+	}
+	else if (STDERR == output)
+	{
+		// Denote message as an error message.
+		sprintf(log_message, "%s (%s | Error): %s", log_message, BD3WS_ServerName, message);
+		//
+
+		// Write to stdout.
+		fprintf(stdout, "%s", log_message);
+		fflush(stdout);
+		//
 	}
 	//
 
 	// Write to log file.
-	fprintf(log_handle, "%s", message);
+	fprintf(log_handle, "%s", log_message);
 	fflush(log_handle);
 	//
 
+	// Unlock the log mutex.
 	pthread_mutex_unlock(&mutex_log);
+	//
+}
+
+/******************************************************************************
+	clean_file_path: Cleans up a given file path in-place. Currently, this
+simply means removing multiple successive path separators (forward slashes).
+******************************************************************************/
+void clean_file_path(char* file_path)
+{
+	// Get the length of the file path.
+	unsigned int length = strlen(file_path);
+	///
+
+	// Initialize string iterators to the beginning of the string.
+	unsigned int trailing = 0;
+	unsigned int leading = 0;
+	//
+
+	// Iterate through the string and remove redundant file path separators.
+	while (leading < length)
+	{
+		// If the iterators are offset from each other, redundant separators have been found and the string elements should be shifted.
+		if (trailing != leading)
+		{
+			file_path[trailing] = file_path[leading];
+		}
+		//
+
+		// If a path separator has been encountered, check for redundant separators immediately following it.
+		if (file_path[trailing] == '/')
+		{
+			// Move the leading iterator to the end of the redundant separator chain.
+			while (file_path[leading] == '/')
+			{
+				++leading;
+			}
+			//
+
+			// Advance the trailing iterator to the new write-point (directly following the first, non-redundant separator).
+			++trailing;
+			//
+		}
+		//
+
+		// If a path separator has not been encountered, continue iteration normally.
+		else
+		{
+			++trailing;
+			++leading;
+		}
+		//
+	}
+	//
+
+	// Null-terminate the path.
+	file_path[trailing] = '\0';
+	//
 }
